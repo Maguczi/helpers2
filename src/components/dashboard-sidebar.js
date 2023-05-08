@@ -2,27 +2,10 @@ import { useEffect } from "react";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
 import PropTypes from "prop-types";
-import {
-  Box,
-  Button,
-  Divider,
-  Drawer,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { ChartBar as ChartBarIcon } from "../icons/chart-bar";
+import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { Menu as MenuIcon } from "../icons/menu";
 import { Git as GitIcon } from "../icons/git";
-import { Cog as CogIcon } from "../icons/cog";
-import { Lock as LockIcon } from "../icons/lock";
-import { Selector as SelectorIcon } from "../icons/selector";
-import { ShoppingBag as ShoppingBagIcon } from "../icons/shopping-bag";
-import { User as UserIcon } from "../icons/user";
-import { UserAdd as UserAddIcon } from "../icons/user-add";
-import { Users as UsersIcon } from "../icons/users";
-import { XCircle as XCircleIcon } from "../icons/x-circle";
-import { Logo } from "./logo";
+import FindInPageIcon from "@mui/icons-material/FindInPage";
 import { NavItem } from "./nav-item";
 
 const items = [
@@ -36,16 +19,11 @@ const items = [
     icon: <GitIcon fontSize="small" />,
     title: "Names",
   },
-  // {
-  //   href: "/products",
-  //   icon: <ShoppingBagIcon fontSize="small" />,
-  //   title: "Products",
-  // },
-  // {
-  //   href: "/settings",
-  //   icon: <CogIcon fontSize="small" />,
-  //   title: "Settings",
-  // },
+  {
+    href: "/pages",
+    icon: <FindInPageIcon fontSize="small" />,
+    title: "Pages",
+  },
 ];
 
 export const DashboardSidebar = (props) => {

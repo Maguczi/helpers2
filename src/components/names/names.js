@@ -3,12 +3,15 @@ import * as React from "react";
 import {
   Card,
   CardContent,
-  CardHeader,
   Divider,
   TextField,
   Chip,
+  Grid,
+  Tooltip,
+  Snackbar,
 } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import MuiAlert from "@mui/material/Alert";
 
 let pressed = [];
@@ -20,6 +23,7 @@ export const FeatureName = (props) => {
   const [commit, setCommit] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [open, setOpen] = React.useState(false);
 
   const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -34,9 +38,38 @@ export const FeatureName = (props) => {
       pressed.length = pressed.length - 1;
 
       if (pressed.length === 0) {
-        names(event.target.value);
+        getNames(event.target.value);
       }
     }, 500);
+  };
+
+  const getNames = async (value) => {
+    setError("");
+
+    const id = parseInt(value, 10);
+
+    if (id > 0) {
+      value = await getJiraTaskName(id);
+    } else if (value.includes("browse")) {
+      value = await getJiraTaskName(getIdFromUrl(value));
+    }
+
+    if (value) {
+      featureName(value);
+      sqlName(value);
+      commitName(value);
+    } else {
+      setFeature("-");
+      setCommit("-");
+      setSql("-");
+    }
+  };
+
+  const getIdFromUrl = (url) => {
+    url = url.replace("https://northernandshell.atlassian.net/browse/", "");
+    url = url.split("-");
+
+    return parseInt(url[1], 10);
   };
 
   const getJiraTaskName = async (id) => {
@@ -66,25 +99,6 @@ export const FeatureName = (props) => {
         setLoading(false);
         setError(err);
       });
-  };
-
-  const names = async (v) => {
-    setError("");
-    const id = parseInt(v, 10);
-
-    if (id > 0) {
-      v = await getJiraTaskName(id);
-    }
-
-    if (v) {
-      featureName(v);
-      sqlName(v);
-      commitName(v);
-    } else {
-      setFeature("-");
-      setCommit("-");
-      setSql("-");
-    }
   };
 
   const featureName = (v) => {
@@ -132,14 +146,52 @@ export const FeatureName = (props) => {
 
     let taskNumber = v.split(" ");
     taskNumber = taskNumber[0];
+    taskNumber = taskNumber.trim();
 
     let name = v;
     name = name.replaceAll(taskNumber, "");
     name = name.replace(/\.$/, "");
     name = name.replace("1  Give feedback", " ");
     name = name.replace("Give feedback", " ");
+    name = name.trim();
 
     setCommit(`[${taskNumber}] ${name}.`);
+  };
+
+  const handleCopy = (type) => {
+    setOpen(true);
+
+    const copyText = document.getElementById(type);
+    navigator.clipboard.writeText(copyText.innerHTML);
+
+    setTimeout(() => {
+      setOpen(false);
+    }, 3000);
+  };
+
+  const copyIconStyle = {
+    "&:hover": {
+      color: "rgb(33, 150, 243)",
+      cursor: "pointer",
+    },
+  };
+
+  const CopyIcon = (props) => {
+    if (feature === "" || feature === "-") {
+      return "";
+    }
+
+    return (
+      <Tooltip title="Copy">
+        <ContentCopyIcon
+          className="copy"
+          onClick={() => {
+            handleCopy(props.type);
+          }}
+          sx={copyIconStyle}
+        />
+      </Tooltip>
+    );
   };
 
   return (
@@ -161,7 +213,7 @@ export const FeatureName = (props) => {
           )}
           <TextField
             fullWidth
-            label="Task title/number"
+            label="Task title/number/URL"
             margin="normal"
             name="name"
             onChange={handleChange}
@@ -181,23 +233,50 @@ export const FeatureName = (props) => {
           <Chip label="Feature Name" />
         </Divider>
         <CardContent>
-          <p>{feature}</p>
+          <Grid container justifyContent="space-between">
+            <Grid item>
+              <p id="feature">{feature}</p>
+            </Grid>
+            <Grid item>
+              <CopyIcon type="feature" />
+            </Grid>
+          </Grid>
         </CardContent>
 
         <Divider>
           <Chip label="Commit Name" />
         </Divider>
         <CardContent>
-          <p>{commit}</p>
+          <Grid container justifyContent="space-between">
+            <Grid item>
+              <p id="commit">{commit}</p>
+            </Grid>
+            <Grid item>
+              <CopyIcon type="commit" />
+            </Grid>
+          </Grid>
         </CardContent>
 
         <Divider>
           <Chip label="SQL Name" />
         </Divider>
         <CardContent>
-          <p>{sql}</p>
+          <Grid container justifyContent="space-between">
+            <Grid item>
+              <p id="sql">{sql}</p>
+            </Grid>
+            <Grid item>
+              <CopyIcon type="sql" />
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
+
+      <Snackbar open={open}>
+        <Alert severity="info" sx={{ width: "100%" }}>
+          Copied!
+        </Alert>
+      </Snackbar>
     </form>
   );
 };
