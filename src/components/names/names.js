@@ -162,7 +162,20 @@ export const FeatureName = (props) => {
     setOpen(true);
 
     const copyText = document.getElementById(type);
-    navigator.clipboard.writeText(copyText.innerHTML);
+
+    const textArea = document.createElement("textarea");
+    textArea.value = copyText.innerText;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      document.execCommand("copy");
+    } catch (err) {
+      console.error("Unable to copy to clipboard", err);
+    }
+
+    document.body.removeChild(textArea);
 
     setTimeout(() => {
       setOpen(false);
