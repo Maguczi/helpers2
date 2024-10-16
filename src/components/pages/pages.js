@@ -19,7 +19,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Link from "@mui/material/Link";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
-import DeleteIcon from "@mui/icons-material/Delete";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { visuallyHidden } from "@mui/utils";
 
@@ -39,10 +39,6 @@ function getComparator(order, orderBy) {
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-// Since 2020 all major browsers ensure sort stability with Array.prototype.sort().
-// stableSort() brings sort stability to non-modern browsers (notably IE11). If you
-// only support modern browsers you can replace stableSort(exampleArray, exampleComparator)
-// with exampleArray.slice().sort(exampleComparator)
 function stableSort(array, comparator) {
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
@@ -75,12 +71,30 @@ const headCells = [
     label: "Type",
   },
   {
-    id: "elements",
+    id: "page_type",
     numeric: false,
     disablePadding: true,
-    label: "Elements",
+    label: "Page",
   },
 ];
+
+const pageTypes = ["express.co.uk", "the-express.com"];
+
+const urlTypes = [
+  "Admin",
+  "Homepage",
+  "Section",
+  "Article",
+  "Admin cache",
+  "Preprod cache",
+];
+
+const selectedOpenInNewWindow = (selected) => {
+  selected.map((url) => {
+    const rand = Math.floor(Math.random() * 100000) + 1;
+    window.open(`${url}?r=${Date.now()}${rand}`, "_blank");
+  });
+};
 
 function EnhancedTableHead(props) {
   const {
@@ -145,7 +159,7 @@ EnhancedTableHead.propTypes = {
 };
 
 function EnhancedTableToolbar(props) {
-  const { numSelected } = props;
+  const { numSelected, selected } = props;
 
   return (
     <Toolbar
@@ -180,11 +194,13 @@ function EnhancedTableToolbar(props) {
       )}
 
       {numSelected > 0 ? (
-        <Tooltip title="Delete">
-          <IconButton>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
+        <>
+          <Tooltip title="Delete">
+            <IconButton onClick={() => selectedOpenInNewWindow(selected)}>
+              <OpenInNewIcon />
+            </IconButton>
+          </Tooltip>
+        </>
       ) : (
         <Tooltip title="Filter list">
           <IconButton>
@@ -206,13 +222,34 @@ export const Pages = (props) => {
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [rows, setRows] = React.useState([]);
 
   useEffect(() => {
-    fetch("./data.json")
-      .then((response) => response.json())
-      .then((json) => setRows(json));
+    const getData = async (id) => {
+      return await fetch(
+        `http://helpers-server.grzegorz.warsaw.netro42.com/get-data.php`
+      )
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          let tmpRows = [];
+
+          data.map((item) => {
+            let tmpRow = item;
+
+            // tmpRow.elements = "aa,ff,gg";
+
+            tmpRows.push(tmpRow);
+          });
+
+          setRows(data);
+        })
+        .catch((err) => {});
+    };
+
+    getData();
   }, []);
 
   const handleRequestSort = (event, property) => {
@@ -223,14 +260,12 @@ export const Pages = (props) => {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelected = rows.map((n) => n.name);
+      const newSelected = rows.map((n) => n.url);
       setSelected(newSelected);
       return;
     }
     setSelected([]);
   };
-
-  console.log("rows", rows);
 
   const handleClick = (event, name) => {
     const selectedIndex = selected.indexOf(name);
@@ -265,9 +300,8 @@ export const Pages = (props) => {
     setDense(event.target.checked);
   };
 
-  const isSelected = (name) => selected.indexOf(name) !== -1;
+  const isSelected = (url) => selected.indexOf(url) !== -1;
 
-  // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
@@ -283,7 +317,10 @@ export const Pages = (props) => {
   return (
     <Box sx={{ width: "100%" }}>
       <Paper sx={{ width: "100%", mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar
+          numSelected={selected.length}
+          selected={selected}
+        />
         <TableContainer>
           <Table
             sx={{ minWidth: 750 }}
@@ -300,17 +337,17 @@ export const Pages = (props) => {
             />
             <TableBody>
               {visibleRows.map((row, index) => {
-                const isItemSelected = isSelected(row.name);
+                const isItemSelected = isSelected(row.url);
                 const labelId = `enhanced-table-checkbox-${index}`;
 
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.name)}
+                    onClick={(event) => handleClick(event, row.url)}
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
-                    key={row.name}
+                    key={row.url}
                     selected={isItemSelected}
                     sx={{ cursor: "pointer" }}
                   >
@@ -333,9 +370,9 @@ export const Pages = (props) => {
                         {row.url}
                       </Link>
                     </TableCell>
-                    <TableCell align="center">{row.name}</TableCell>
-                    <TableCell align="center">{row.type}</TableCell>
-                    <TableCell align="center">{row.element}</TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{urlTypes[row.type - 1]}</TableCell>
+                    <TableCell>{pageTypes[row.page_type - 1]}</TableCell>
                   </TableRow>
                 );
               })}

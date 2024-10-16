@@ -9,6 +9,9 @@ import {
   Grid,
   Tooltip,
   Snackbar,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -24,6 +27,7 @@ export const FeatureName = (props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = React.useState(false);
+  const [pageType, setPageType] = useState("express");
 
   const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -41,6 +45,10 @@ export const FeatureName = (props) => {
         getNames(event.target.value);
       }
     }, 500);
+  };
+
+  const handleTypeChange = (event) => {
+    setPageType(event.target.value);
   };
 
   const getNames = async (value) => {
@@ -72,11 +80,13 @@ export const FeatureName = (props) => {
     return parseInt(url[1], 10);
   };
 
-  const getJiraTaskName = async (id) => {
+  const getJiraTaskName = async (id, type) => {
     setLoading(true);
 
+    console.log("gkk pageType", pageType);
+
     return await fetch(
-      `http://helpers-server.grzegorz.warsaw.netro42.com/get-issue.php?issue=${id}`
+      `http://helpers-server.grzegorz.warsaw.netro42.com/get-issue.php?issue=${id}&type=${pageType}`
     )
       .then((response) => {
         return response.text();
@@ -114,6 +124,7 @@ export const FeatureName = (props) => {
     name = name.replace("Give feedback", " ");
     name = name.toLowerCase();
 
+    name = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     name = name.replaceAll("=", "-");
     name = name.replace(/\.$/, "");
     name = name.replaceAll("-", " ");
@@ -239,6 +250,22 @@ export const FeatureName = (props) => {
             color="info"
             focused
           />
+
+          <RadioGroup row name="type" defaultValue="express">
+            <FormControlLabel
+              value="express"
+              control={<Radio color="info" />}
+              label="express.co.uk"
+              onChange={handleTypeChange}
+            />
+            <FormControlLabel
+              value="fryderyk"
+              control={<Radio color="info" />}
+              label="fryderyk"
+              onChange={handleTypeChange}
+            />
+          </RadioGroup>
+
           {error ? <Alert severity="error">{error}</Alert> : ""}
         </CardContent>
 

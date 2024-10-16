@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import NextLink from "next/link";
 import { useRouter } from "next/router";
 import PropTypes from "prop-types";
 import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { Menu as MenuIcon } from "../icons/menu";
 import { Git as GitIcon } from "../icons/git";
+import FileCopy from "@mui/icons-material/FileCopy";
 import FindInPageIcon from "@mui/icons-material/FindInPage";
 import { NavItem } from "./nav-item";
 
@@ -21,8 +21,13 @@ const items = [
   },
   {
     href: "/pages",
-    icon: <FindInPageIcon fontSize="small" />,
+    icon: <FileCopy fontSize="small" />,
     title: "Pages",
+  },
+  {
+    href: "/url-inspection",
+    icon: <FindInPageIcon fontSize="small" />,
+    title: "URL inspection",
   },
 ];
 
